@@ -6,6 +6,7 @@ import com.example.newsfeed.user.entity.User;
 import com.example.newsfeed.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    @Transactional(readOnly = true)
     public UserResponseDto getUserById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new RuntimeException("유저를 찾을 수 없습니다.")
@@ -22,12 +24,14 @@ public class UserService {
         return new UserResponseDto(user.getId(), user.getName(), user.getFollowersCount(), user.getFollowingsCount());
     }
 
+    @Transactional(readOnly = true)
     public List<UserResponseDto> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(user -> new UserResponseDto(user.getId(), user.getName(), user.getFollowersCount(), user.getFollowingsCount()))
                 .toList();
     }
 
+    @Transactional
     public UserResponseDto updateUser(Long userId, UserUpdateRequestDto dto) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new RuntimeException("유저를 찾을 수 없습니다.")
@@ -46,6 +50,7 @@ public class UserService {
         return new UserResponseDto(user.getId(), user.getName(), user.getFollowersCount(), user.getFollowingsCount());
     }
 
+    @Transactional
     public void deleteUser(Long userId, String password) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new RuntimeException("유저를 찾을 수 없습니다.")
