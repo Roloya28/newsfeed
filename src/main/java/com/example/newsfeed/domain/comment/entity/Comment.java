@@ -1,5 +1,6 @@
-package com.example.newsfeed.domain.feed.entity;
+package com.example.newsfeed.domain.comment.entity;
 
+import com.example.newsfeed.domain.feed.entity.Feed;
 import com.example.newsfeed.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -9,13 +10,12 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
-import static lombok.AccessLevel.PROTECTED;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = PROTECTED)
-@Table(name = "feeds")
-public class Feed {
+@NoArgsConstructor
+@Table(name = "comments")
+public class Comment {
 
     @Id
     @GeneratedValue(strategy = IDENTITY)
@@ -25,8 +25,9 @@ public class Feed {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private String title;
+    @ManyToOne
+    @JoinColumn(name = "feed_id", nullable = false)
+    private Feed feed;
 
     @Column(nullable = false, length = 100)
     private String content;
@@ -35,21 +36,16 @@ public class Feed {
     private LocalDateTime updatedAt;
 
     @Builder
-    public Feed(User user, String title, String content, Long userId) {
+    public Comment(User user, Feed feed, String content) {
         this.user = user;
-        this.title = title;
+        this.feed = feed;
         this.content = content;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void updateFeed(String title, String content) {
-        this.title = title;
+    public void updateContent(String content) {
         this.content = content;
         this.updatedAt = LocalDateTime.now();
-    }
-
-    public Long getUserId() {
-        return this.user.getId();
     }
 }

@@ -2,6 +2,7 @@ package com.example.newsfeed.domain.user.controller;
 
 import com.example.newsfeed.domain.user.dto.request.UserUpdateRequestDto;
 import com.example.newsfeed.domain.user.dto.response.UserResponseDto;
+import com.example.newsfeed.domain.user.entity.User;
 import com.example.newsfeed.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,14 +30,14 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long userId, @RequestBody UserUpdateRequestDto dto) {
-        UserResponseDto updatedUser = userService.updateUser(userId, dto);
+    public ResponseEntity<UserResponseDto> updateUser(@SessionAttribute("LOGIN_USER") User user, @RequestBody UserUpdateRequestDto dto) {
+        UserResponseDto updatedUser = userService.updateUser(user.getId(), dto);
         return ResponseEntity.ok(updatedUser);
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long  userId, @RequestParam String password) {
-        userService.deleteUser(userId, password);
+    public ResponseEntity<Void> deleteUser(@SessionAttribute("LOGIN_USER") User user, @RequestParam String password) {
+        userService.deleteUser(user.getId(), password);
         return ResponseEntity.noContent().build();
     }
 }

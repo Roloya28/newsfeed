@@ -3,6 +3,7 @@ package com.example.newsfeed.domain.feed.controller;
 import com.example.newsfeed.domain.feed.dto.request.FeedRequestDto;
 import com.example.newsfeed.domain.feed.dto.response.FeedResponseDto;
 import com.example.newsfeed.domain.feed.service.FeedService;
+import com.example.newsfeed.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +20,8 @@ public class FeedController {
     private final FeedService feedService;
 
     @PostMapping
-    public ResponseEntity<FeedResponseDto> createFeed(@RequestParam Long userId, @RequestBody FeedRequestDto dto) {
-        return ResponseEntity.ok(feedService.createFeed(userId, dto));
+    public ResponseEntity<FeedResponseDto> createFeed(@SessionAttribute("LOGIN_USER") User user, @RequestBody FeedRequestDto dto) {
+        return ResponseEntity.ok(feedService.createFeed(user.getId(), dto));
     }
 
     @GetMapping("/{feedId}")
@@ -34,13 +35,13 @@ public class FeedController {
     }
 
     @PatchMapping("/{feedId}")
-    public ResponseEntity<FeedResponseDto> updateFeed(@PathVariable Long feedId, @RequestParam Long userId, @RequestBody FeedRequestDto dto) {
-        return ResponseEntity.ok(feedService.updateFeed(feedId, userId, dto));
+    public ResponseEntity<FeedResponseDto> updateFeed(@SessionAttribute("LOGIN_USER") User user, @PathVariable Long feedId, @RequestBody FeedRequestDto dto) {
+        return ResponseEntity.ok(feedService.updateFeed(user.getId(), feedId, dto));
     }
 
     @DeleteMapping("/{feedId}")
-    public ResponseEntity<Void> deleteFeed(@PathVariable Long feedId, @RequestParam Long userId) {
-        feedService.deleteFeed(feedId, userId);
+    public ResponseEntity<Void> deleteFeed(@SessionAttribute("LOGIN_USER") User user, @PathVariable Long feedId) {
+        feedService.deleteFeed(user.getId(), feedId);
         return ResponseEntity.noContent().build();
     }
 

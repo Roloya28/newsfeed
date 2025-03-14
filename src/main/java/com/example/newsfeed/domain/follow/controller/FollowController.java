@@ -1,6 +1,7 @@
 package com.example.newsfeed.domain.follow.controller;
 
 import com.example.newsfeed.domain.follow.service.FollowService;
+import com.example.newsfeed.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,8 +14,8 @@ public class FollowController {
     private final FollowService followService;
 
     @PostMapping("/{followingId}")
-    public ResponseEntity<FollowService.FollowStatus> toggleFollow(@RequestParam Long followerId, @PathVariable Long followingId) {
-        FollowService.FollowStatus result = followService.toggleFollow(followerId, followingId);
+    public ResponseEntity<FollowService.FollowStatus> toggleFollow(@SessionAttribute("LOGIN_USER") User user, @PathVariable Long followingId) {
+        FollowService.FollowStatus result = followService.toggleFollow(user.getId(), followingId);
         return ResponseEntity.ok(result);
     }
 }
