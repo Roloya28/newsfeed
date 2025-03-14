@@ -4,9 +4,11 @@ import com.example.newsfeed.domain.feed.dto.request.FeedRequestDto;
 import com.example.newsfeed.domain.feed.dto.response.FeedResponseDto;
 import com.example.newsfeed.domain.feed.service.FeedService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -41,4 +43,19 @@ public class FeedController {
         feedService.deleteFeed(feedId, userId);
         return ResponseEntity.noContent().build();
     }
+
+    // 정렬 기능
+    @GetMapping("/sorted")
+    public ResponseEntity<List<FeedResponseDto>> getFeedsSortedByUpdatedAt() {
+        return ResponseEntity.ok(feedService.getFeedsSortedByUpdatedAt());
+    }
+
+    // 기간별 검색 기능
+    @GetMapping("/search")
+    public ResponseEntity<List<FeedResponseDto>> getFeedsByDateRange(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+        return ResponseEntity.ok(feedService.getFeedsByDateRange(startDate, endDate));
+    }
 }
+
