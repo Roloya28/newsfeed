@@ -2,12 +2,14 @@ package com.example.newsfeed.domain.comment.dto.response;
 
 import com.example.newsfeed.domain.comment.entity.Comment;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Getter
 @RequiredArgsConstructor
+@NoArgsConstructor(force = true)
 public class CommentResponseDto {
 
     private final Long id;
