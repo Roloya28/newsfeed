@@ -21,21 +21,24 @@ public class UserService {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new RuntimeException("유저를 찾을 수 없습니다.")
         );
-        return new UserResponseDto(user.getId(), user.getName(), user.getFollowersCount(), user.getFollowingsCount());
+        return new UserResponseDto(user.getId(), user.getName(), user.getFollowersCount(), user.getFollowingsCount(), user.getRole());
     }
 
     @Transactional(readOnly = true)
     public List<UserResponseDto> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(user -> new UserResponseDto(user.getId(), user.getName(), user.getFollowersCount(), user.getFollowingsCount()))
+                .map(user -> new UserResponseDto(user.getId(), user.getName(), user.getFollowersCount(), user.getFollowingsCount(), user.getRole()))
                 .toList();
     }
 
     @Transactional
-    public UserResponseDto updateUser(Long userId, UserUpdateRequestDto dto) {
+    public UserResponseDto updateUser(User loginUser, Long userId, UserUpdateRequestDto dto) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new RuntimeException("유저를 찾을 수 없습니다.")
         );
+        if (!user.equals(loginUser)) {
+            throw new RuntimeException("유저 본인만 수정이 가능합니다.");
+        }
         if (dto.getName() != null) user.updateName(dto.getName());
         if (dto.getChangePassword() != null) {
             if (!user.getPassword().equals(dto.getPassword())) {
@@ -47,14 +50,17 @@ public class UserService {
             user.updatePassword(dto.getChangePassword());
         }
         userRepository.save(user);
-        return new UserResponseDto(user.getId(), user.getName(), user.getFollowersCount(), user.getFollowingsCount());
+        return new UserResponseDto(user.getId(), user.getName(), user.getFollowersCount(), user.getFollowingsCount(), user.getRole());
     }
 
     @Transactional
-    public void deleteUser(Long userId, String password) {
+    public void deleteUser(User loginUser, Long userId, String password) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new RuntimeException("유저를 찾을 수 없습니다.")
         );
+        if (!user.equals(loginUser)) {
+            throw new RuntimeException("유저 본인만 아이디 삭제가 가능합니다.");
+        }
         if (!user.getPassword().equals(password)) {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }

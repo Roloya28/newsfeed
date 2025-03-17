@@ -30,14 +30,20 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public ResponseEntity<UserResponseDto> updateUser(@SessionAttribute("LOGIN_USER") User user, @RequestBody UserUpdateRequestDto dto) {
-        UserResponseDto updatedUser = userService.updateUser(user.getId(), dto);
+    public ResponseEntity<UserResponseDto> updateUser(@SessionAttribute("LOGIN_USER") User loginUser, @PathVariable Long userId, @RequestBody UserUpdateRequestDto dto) {
+        if (loginUser == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        UserResponseDto updatedUser = userService.updateUser(loginUser, userId, dto);
         return ResponseEntity.ok(updatedUser);
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(@SessionAttribute("LOGIN_USER") User user, @RequestParam String password) {
-        userService.deleteUser(user.getId(), password);
+    public ResponseEntity<Void> deleteUser(@SessionAttribute("LOGIN_USER") User loginUser, @PathVariable Long userId, @RequestParam String password) {
+        if (loginUser == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        userService.deleteUser(loginUser, userId, password);
         return ResponseEntity.noContent().build();
     }
 }

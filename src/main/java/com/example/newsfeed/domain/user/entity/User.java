@@ -34,11 +34,16 @@ public class User {
     private Long followingsCount = 0L;
     private LocalDateTime deletedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserRole role;
+
     @Builder
-    public User(String email, String password, String name) {
+    public User(String email, String password, String name, UserRole role) {
         this.email = email;
         this.password = password;
         this.name = name;
+        this.role = role;
         this.followersCount = 0L;
         this.followingsCount = 0L;
     }
