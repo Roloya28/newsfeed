@@ -8,20 +8,23 @@ import com.example.newsfeed.domain.user.entity.UserRole;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
@@ -40,32 +43,97 @@ class CommentControllerTest {
     @Test
     void 댓글_생성() throws Exception {
         // Given
+        Long feedId = 1L;
         User user = new User("test@sample.com", "password1234", "테스트", UserRole.USER);
+
+        ReflectionTestUtils.setField(user, "id", 1L);
+
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("LOGIN_USER", user);
 
-        Long feedId = 1L;
-        Long commentId = 1L;
-        String content = "새 댓글";
-        LocalDateTime now = LocalDateTime.now();
+        CommentRequestDto requestDto = new CommentRequestDto("새 댓글");
 
-        CommentRequestDto requestDto = new CommentRequestDto(content);
-        CommentResponseDto responseDto = new CommentResponseDto(commentId, user.getId(), feedId, content, now, now);
+        CommentResponseDto responseDto = new CommentResponseDto(1L, user.getId(), feedId, "새 댓글", LocalDateTime.now(), LocalDateTime.now());
 
-        given(commentService.createComment(anyLong(), anyLong(), any(CommentRequestDto.class)))
-                .willReturn(new CommentResponseDto(1L, 1L, feedId, "새 댓글", LocalDateTime.now(), LocalDateTime.now()));
+        // CommentService 의 createComment 가 ResponseDto 를 반환하도록 설정
+        given(commentService.createComment(anyLong(), anyLong(), any(CommentRequestDto.class))).willReturn(responseDto);
 
         // When & Then
-        mockMvc.perform(post("/comments/{feedId}", feedId)
+        mockMvc.perform(MockMvcRequestBuilders.post("/comments/{feedId}", feedId)
                 .session(session)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(commentId))
+                .andExpect(jsonPath("$.content").value("새 댓글"))
+                .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.userId").value(user.getId()))
-                .andExpect(jsonPath("$.feedId").value(feedId))
-                .andExpect(jsonPath("$.content").value(content));
+                .andExpect(jsonPath("$.feedId").value(feedId));
     }
 
+    @Test
+    void 댓글_조회() throws Exception{
+        // Given
+        Long feedId = 1L;
+        User user = new User("test@sample.com", "password1234", "테스트", UserRole.USER);
+        ReflectionTestUtils.setField(user, "id", 1L);
 
+        List<CommentResponseDto> responseList = List.of(
+                new CommentResponseDto(1L, user.getId(), feedId, "댓글1", LocalDateTime.now(), LocalDateTime.now()),
+                new CommentResponseDto(2L, user.getId(), feedId, "댓글2", LocalDateTime.now(), LocalDateTime.now())
+        );
+
+        given(commentService.getCommentsByFeed(anyLong())).willReturn(responseList);
+
+        // When & Then
+        mockMvc.perform(MockMvcRequestBuilders.get("/comments/{feedId}", feedId)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].content").value("댓글1"))
+                .andExpect(jsonPath("$[1].content").value("댓글2"));
+    }
+
+    @Test
+    void 댓글_수정() throws Exception {
+        // Given
+        Long commentId= 1L;
+        User user = new User("test@sample.com", "password1234", "테스트", UserRole.USER);
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("LOGIN_USER", user);
+
+        CommentRequestDto requestDto = new CommentRequestDto("수정한 댓글");
+
+        CommentResponseDto responseDto = new CommentResponseDto(commentId, user.getId(), 1L, "수정한 댓글", LocalDateTime.now(), LocalDateTime.now());
+
+        given(commentService.updateComment(anyLong(), anyLong(), any(CommentRequestDto.class))).willReturn(responseDto);
+
+        // When & Then
+        mockMvc.perform(MockMvcRequestBuilders.patch("/comments/{commentId}", commentId)
+                .session(session)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value("수정한 댓글"));
+    }
+
+    @Test
+    void 댓글_삭제() throws Exception {
+        // Given
+        Long commentId = 1L;
+        User user = new User("test@sample.com", "password1234", "테스트", UserRole.USER);
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("LOGIN_USER", user);
+
+        Mockito.doNothing().when(commentService).deleteComment(anyLong(), anyLong());
+
+        // When & Then
+        mockMvc.perform(MockMvcRequestBuilders.delete("/comments/{commentId}", commentId)
+                .session(session)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
 }

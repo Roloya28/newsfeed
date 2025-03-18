@@ -1,126 +1,91 @@
 package com.example.newsfeed.domain.like.repository;
 
 import com.example.newsfeed.domain.comment.entity.Comment;
+import com.example.newsfeed.domain.comment.repository.CommentRepository;
 import com.example.newsfeed.domain.feed.entity.Feed;
+import com.example.newsfeed.domain.feed.repository.FeedRepository;
+import com.example.newsfeed.domain.like.entity.Like;
 import com.example.newsfeed.domain.user.entity.User;
 import com.example.newsfeed.domain.user.entity.UserRole;
+import com.example.newsfeed.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@DataJpaTest
 class LikeRepositoryTest {
 
-    @Mock
+    @Autowired
     private LikeRepository likeRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private FeedRepository feedRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
     @Test
-    void 유저가_게시글에_좋아요_눌럿는지_확인() {
+    void 게시글_좋아요_확인() {
         // Given
-        User user = new User("test@sample.com", "password1234", "테스트", UserRole.USER    );
-        ReflectionTestUtils.setField(user, "id", 1L);
-
-        Feed feed = Feed.builder()
-                .user(user)
-                .title("피드 제목")
-                .content("내용")
-                .build();
-        ReflectionTestUtils.setField(feed, "id", 1L);
-
-        given(likeRepository.existsByUserAndFeed(user, feed)).willReturn(true);
+        User user = userRepository.save(new User("test@sample.com", "password1234", "테스트", UserRole.USER));
+        Feed feed = feedRepository.save(new Feed(user, "제목", "내용", user.getId()));
+        likeRepository.save(new Like(user, feed, null));
 
         // When
-        boolean result = likeRepository.existsByUserAndFeed(user, feed);
+        boolean exists = likeRepository.existsByUserAndFeed(user, feed);
 
         // Then
-        assertThat(result).isTrue();
-        verify(likeRepository, times(1)).existsByUserAndFeed(user, feed);
+        assertThat(exists).isTrue();
     }
 
     @Test
-    void 유저가_댓글에_좋아요_눌럿는지_확인() {
+    void 댓글_좋아요_확인() {
         // Given
-        User user = new User("test@sample.com", "password1234", "테스트", UserRole.USER);
-        ReflectionTestUtils.setField(user, "id", 1L);
-
-        Feed feed = Feed.builder()
-                .user(user)
-                .title("피드 제목")
-                .content("내용")
-                .build();
-        ReflectionTestUtils.setField(feed, "id", 1L);
-
-        Comment comment = Comment.builder()
-                .user(user)
-                .feed(feed)
-                .content("댓글")
-                .build();
-        ReflectionTestUtils.setField(comment, "id", 1L);
-
-        given(likeRepository.existsByUserAndComment(user, comment)).willReturn(true);
+        User user = userRepository.save(new User("test@sample.com", "password1234", "테스트", UserRole.USER));
+        Feed feed = feedRepository.save(new Feed(user, "제목", "내용", user.getId()));
+        Comment comment = commentRepository.save(new Comment(user, feed, "댓글"));
+        likeRepository.save(new Like(user, null, comment));
 
         // When
-        boolean result = likeRepository.existsByUserAndComment(user, comment);
+        boolean exists = likeRepository.existsByUserAndComment(user, comment);
 
         // Then
-        assertThat(result).isTrue();
-        verify(likeRepository, times(1)).existsByUserAndComment(user, comment);
+        assertThat(exists).isTrue();
     }
 
     @Test
-    void 유저가_게시글에_좋아요_취소() {
+    void 게시글_좋아요_취소() {
         // Given
-        User user = new User("test@sample.com", "password1234", "테스트", UserRole.USER);
-        ReflectionTestUtils.setField(user, "id", 1L);
-
-        Feed feed = Feed.builder()
-                .user(user)
-                .title("피드 제목")
-                .content("내용")
-                .build();
-        ReflectionTestUtils.setField(feed, "id", 1L);
-
-        doNothing().when(likeRepository).deleteByUserAndFeed(user, feed);
+        User user = userRepository.save(new User("test@sample.com", "password1234", "테스트", UserRole.USER));
+        Feed feed = feedRepository.save(new Feed(user, "제목", "내용", user.getId()));
+        Like like = likeRepository.save(new Like(user, feed, null));
 
         // When
         likeRepository.deleteByUserAndFeed(user, feed);
+        boolean exists = likeRepository.existsByUserAndFeed(user, feed);
 
         // Then
-        verify(likeRepository, times(1)).deleteByUserAndFeed(user, feed);
+        assertThat(exists).isFalse();
     }
 
     @Test
-    void 유저가_특정댓글에_좋아요_취소() {
+    void 댓글_좋아요_취소() {
         // Given
-        User user = new User("test@sample.com", "password1234", "테스트", UserRole.USER);
-        ReflectionTestUtils.setField(user, "id", 1L);
-
-        Feed feed = Feed.builder()
-                .user(user)
-                .title("피드 제목")
-                .content("내용")
-                .build();
-        ReflectionTestUtils.setField(feed, "id", 1L);
-
-        Comment comment = Comment.builder()
-                .user(user)
-                .feed(feed)
-                .content("댓글")
-                .build();
-        ReflectionTestUtils.setField(comment, "id", 1L);
-
-        doNothing().when(likeRepository).deleteByUserAndComment(user, comment);
+        User user = userRepository.save(new User("test@sample.com", "password1234", "테스트", UserRole.USER));
+        Feed feed = feedRepository.save(new Feed(user, "제목", "내용", user.getId()));
+        Comment comment = commentRepository.save(new Comment(user, feed, "댓글"));
+        Like like = likeRepository.save(new Like(user, null, comment));
 
         // When
         likeRepository.deleteByUserAndComment(user, comment);
+        boolean exists = likeRepository.existsByUserAndComment(user, comment);
 
         // Then
-        verify(likeRepository, times(1)).deleteByUserAndComment(user, comment);
+        assertThat(exists).isFalse();
     }
 }
