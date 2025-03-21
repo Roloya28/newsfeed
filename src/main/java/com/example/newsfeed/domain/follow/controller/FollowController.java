@@ -11,11 +11,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/follow")
 public class FollowController {
 
-    private final FollowService followService;
+    private FollowService followService;
 
     @PostMapping("/{followingId}")
-    public ResponseEntity<FollowService.FollowStatus> toggleFollow(@SessionAttribute("LOGIN_USER") User user, @PathVariable Long followingId) {
+    public ResponseEntity<String> toggleFollow(@SessionAttribute("LOGIN_USER") User user, @PathVariable Long followingId) {
         FollowService.FollowStatus result = followService.toggleFollow(user.getId(), followingId);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(result.name());
     }
 }
