@@ -18,6 +18,8 @@ repositories {
 }
 
 dependencies {
+    implementation 'com.mysql:mysql-connector-j:9.1.0'
+
     // spring security crypto
     implementation 'org.springframework.security:spring-security-crypto'
 

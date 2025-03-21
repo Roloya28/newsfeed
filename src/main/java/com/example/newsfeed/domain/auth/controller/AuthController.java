@@ -4,6 +4,7 @@ import com.example.newsfeed.domain.auth.dto.request.AuthRequestDto;
 import com.example.newsfeed.domain.auth.dto.response.AuthResponseDto;
 import com.example.newsfeed.domain.auth.service.AuthService;
 import com.example.newsfeed.domain.user.entity.User;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,13 @@ public class AuthController {
     public ResponseEntity<AuthResponseDto> signup(@RequestBody AuthRequestDto dto) {
         User user = authService.signup(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponseDto(user));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponseDto> login(@RequestBody AuthRequestDto dto, HttpSession session) {
+        User user = authService.login(dto);
+        session.setAttribute("LOGIN_USER", user.getId());
+        return ResponseEntity.ok(new AuthResponseDto(user));
     }
 
     // Spring 이 ResponseStatusException 을 감지 -> 400 상태 코드와 메세지를 Json 응답으로 반환

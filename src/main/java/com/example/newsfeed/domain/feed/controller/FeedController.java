@@ -20,8 +20,9 @@ public class FeedController {
     private final FeedService feedService;
 
     @PostMapping
-    public ResponseEntity<FeedResponseDto> createFeed(@SessionAttribute("LOGIN_USER") User user, @RequestBody FeedRequestDto dto) {
-        return ResponseEntity.ok(feedService.createFeed(user.getId(), dto));
+    public ResponseEntity<FeedResponseDto> createFeed(@SessionAttribute("LOGIN_USER") Long userId, @RequestBody FeedRequestDto dto) {
+        System.out.println("세션에서 받아온 유저: " + userId);
+        return ResponseEntity.ok(feedService.createFeed(userId, dto));
     }
 
     @GetMapping("/{feedId}")
